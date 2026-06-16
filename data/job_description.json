@@ -1,0 +1,32 @@
+{
+  "title": "Senior Machine Learning Engineer - Fraud Detection",
+  "summary": "Build and operate production ML systems for transaction fraud detection, including anomaly detection, model monitoring, feature pipelines, and cross-functional collaboration with risk teams.",
+  "must_have_skills": [
+    "python",
+    "machine learning",
+    "fraud detection",
+    "anomaly detection",
+    "model deployment",
+    "model monitoring",
+    "sql"
+  ],
+  "nice_to_have_skills": [
+    "graph analytics",
+    "stream processing",
+    "mlops",
+    "risk analytics",
+    "feature stores"
+  ],
+  "domains": [
+    "fintech",
+    "payments",
+    "risk"
+  ],
+  "seniority_signals": [
+    "production ownership",
+    "cross-functional collaboration",
+    "mentoring",
+    "incident response"
+  ]
+}
+

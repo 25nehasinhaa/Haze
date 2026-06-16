@@ -1,0 +1,93 @@
+[
+  {
+    "name": "Aarav Keyword",
+    "headline": "Senior AI Engineer with Python, ML, Fraud Detection, MLOps, Model Monitoring, SQL, Graph Analytics, Stream Processing",
+    "summary": "Broad AI engineer profile with many role keywords. Claims experience across fraud, MLOps, monitoring, and graph analytics.",
+    "skills": ["python", "machine learning", "fraud detection", "anomaly detection", "model deployment", "model monitoring", "sql", "graph analytics", "stream processing", "mlops", "feature stores"],
+    "domains": ["fintech"],
+    "evidence": [
+      {"claim": "python", "level": "strong", "last_used": 2025, "source": "Built internal analytics scripts for sales reporting."},
+      {"claim": "machine learning", "level": "partial", "last_used": 2023, "source": "Built churn prediction notebook prototype."},
+      {"claim": "fraud detection", "level": "unsupported", "last_used": 2026, "source": "Listed in skills section only."},
+      {"claim": "anomaly detection", "level": "weak", "last_used": 2021, "source": "Course project mentioned without production evidence."},
+      {"claim": "model deployment", "level": "weak", "last_used": 2020, "source": "Deployed one Flask demo app."},
+      {"claim": "model monitoring", "level": "unsupported", "last_used": 2026, "source": "Listed in headline only."},
+      {"claim": "sql", "level": "partial", "last_used": 2024, "source": "Used SQL for dashboard queries."},
+      {"claim": "graph analytics", "level": "unsupported", "last_used": 2026, "source": "Listed in skills section only."},
+      {"claim": "stream processing", "level": "unsupported", "last_used": 2026, "source": "Listed in skills section only."},
+      {"claim": "mlops", "level": "weak", "last_used": 2021, "source": "Mentioned CI/CD exposure."}
+    ],
+    "career_events": [
+      {"year": 2020, "event": "Junior data analyst"},
+      {"year": 2022, "event": "AI engineer"},
+      {"year": 2025, "event": "Senior AI engineer"}
+    ]
+  },
+  {
+    "name": "Meera Evidence",
+    "headline": "ML Engineer focused on payment risk, anomaly detection, and production model operations",
+    "summary": "Lower keyword density than Aarav, but stronger evidence in fraud-adjacent payment risk systems and production ML ownership.",
+    "skills": ["python", "machine learning", "anomaly detection", "model deployment", "model monitoring", "sql", "risk analytics", "stream processing"],
+    "domains": ["payments", "risk", "fintech"],
+    "evidence": [
+      {"claim": "python", "level": "strong", "last_used": 2026, "source": "Maintained Python feature pipeline for transaction risk models."},
+      {"claim": "machine learning", "level": "strong", "last_used": 2026, "source": "Owned gradient boosting and isolation forest models for payment risk."},
+      {"claim": "fraud detection", "level": "partial", "last_used": 2025, "source": "Worked on payment risk alerts adjacent to fraud operations."},
+      {"claim": "anomaly detection", "level": "strong", "last_used": 2026, "source": "Built anomaly detection for abnormal transaction velocity."},
+      {"claim": "model deployment", "level": "strong", "last_used": 2025, "source": "Shipped model scoring service used by risk operations."},
+      {"claim": "model monitoring", "level": "strong", "last_used": 2026, "source": "Monitored drift, alert precision, and false positive rate weekly."},
+      {"claim": "sql", "level": "strong", "last_used": 2026, "source": "Wrote production SQL transformations for risk features."},
+      {"claim": "stream processing", "level": "partial", "last_used": 2025, "source": "Consumed Kafka event streams for transaction scoring."}
+    ],
+    "career_events": [
+      {"year": 2021, "event": "Data scientist in payments analytics"},
+      {"year": 2023, "event": "ML engineer for risk platform"},
+      {"year": 2025, "event": "Owned production anomaly detection models"}
+    ]
+  },
+  {
+    "name": "Kabir Stale",
+    "headline": "Experienced data scientist with fraud analytics background",
+    "summary": "Strong historical fraud analytics profile, but most role-relevant evidence is old and not clearly productionized recently.",
+    "skills": ["python", "machine learning", "fraud detection", "sql", "risk analytics"],
+    "domains": ["banking", "risk"],
+    "evidence": [
+      {"claim": "python", "level": "partial", "last_used": 2022, "source": "Used Python for bank fraud reports."},
+      {"claim": "machine learning", "level": "partial", "last_used": 2021, "source": "Built random forest fraud model prototype."},
+      {"claim": "fraud detection", "level": "strong", "last_used": 2020, "source": "Worked on card fraud rule tuning at bank."},
+      {"claim": "anomaly detection", "level": "weak", "last_used": 2019, "source": "Mentioned anomaly detection in legacy project."},
+      {"claim": "model deployment", "level": "unsupported", "last_used": 2026, "source": "No production model deployment evidence."},
+      {"claim": "model monitoring", "level": "unsupported", "last_used": 2026, "source": "No monitoring evidence found."},
+      {"claim": "sql", "level": "strong", "last_used": 2024, "source": "Built reporting queries for risk team."}
+    ],
+    "career_events": [
+      {"year": 2018, "event": "Fraud analyst"},
+      {"year": 2020, "event": "Data scientist in banking"},
+      {"year": 2024, "event": "Analytics manager focused on reporting"}
+    ]
+  },
+  {
+    "name": "Riya HiddenGem",
+    "headline": "Signal processing engineer turned ML engineer for anomaly detection in IoT systems",
+    "summary": "Does not use many fraud keywords, but has strong anomaly detection, streaming, monitoring, and pattern recognition evidence that transfers well.",
+    "skills": ["python", "machine learning", "anomaly detection", "model deployment", "model monitoring", "sql", "stream processing", "pattern recognition"],
+    "domains": ["iot", "telemetry"],
+    "evidence": [
+      {"claim": "python", "level": "strong", "last_used": 2026, "source": "Built Python ML pipelines for sensor anomaly detection."},
+      {"claim": "machine learning", "level": "strong", "last_used": 2026, "source": "Developed classifiers and anomaly detectors for high-volume telemetry."},
+      {"claim": "fraud detection", "level": "unsupported", "last_used": 2026, "source": "No direct fraud domain experience."},
+      {"claim": "anomaly detection", "level": "strong", "last_used": 2026, "source": "Production anomaly models reduced false alerts by 31%."},
+      {"claim": "model deployment", "level": "strong", "last_used": 2025, "source": "Deployed edge-to-cloud model scoring pipeline."},
+      {"claim": "model monitoring", "level": "strong", "last_used": 2026, "source": "Tracked drift and alert quality across sensor fleets."},
+      {"claim": "sql", "level": "partial", "last_used": 2025, "source": "Queried telemetry warehouse for feature analysis."},
+      {"claim": "stream processing", "level": "strong", "last_used": 2026, "source": "Processed streaming device events for real-time anomaly alerts."},
+      {"claim": "pattern recognition", "level": "strong", "last_used": 2026, "source": "Applied signal processing and pattern recognition to noisy time-series data."}
+    ],
+    "career_events": [
+      {"year": 2020, "event": "Signal processing engineer"},
+      {"year": 2022, "event": "ML engineer for IoT anomaly detection"},
+      {"year": 2025, "event": "Led production monitoring for telemetry models"}
+    ]
+  }
+]
+
