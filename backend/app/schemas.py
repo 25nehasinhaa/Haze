@@ -21,6 +21,8 @@ class CandidateProfile(BaseModel):
     domains: list[str]
     evidence: list[EvidenceItem]
     career_events: list[CareerEvent]
+    years_of_experience: float | None = None
+    current_title: str = ""
 
 
 class JobDescription(BaseModel):

@@ -18,6 +18,10 @@ def rank_candidates(jd: dict, candidates: list[dict]) -> dict:
                 "evidence_strength": round(result["evidence_strength"], 2),
                 "recency": round(result["recency"], 2),
                 "domain_alignment": round(result["domain_alignment"], 2),
+                "experience_match": round(result["experience_match"], 2),
+                "career_growth": round(result["career_growth"], 2),
+                "behavioral_fit": round(result["behavioral_fit"], 2),
+                "confidence": round(result["confidence"], 2),
                 "snr": round(result["snr"], 2),
                 "trust_label": result["trust_label"],
                 "summary": result["summary"],
@@ -25,14 +29,20 @@ def rank_candidates(jd: dict, candidates: list[dict]) -> dict:
                 "gaps": result["gaps"],
                 "interview_probes": build_interview_probes(result),
                 "skill_scores": {key: round(value, 2) for key, value in result["skill_scores"].items()},
+                "strengths": result["strengths"],
+                "concerns": result["concerns"],
+                "recommendation": result["recommendation"],
             }
         )
 
+    naive_top = naive_results[0]["name"] if naive_results else (signal_results[0]["name"] if signal_results else "")
+    signal_top = signal_results[0]["name"] if signal_results else ""
+
     return {
         "job_title": jd["title"],
-        "naive_top": naive_results[0]["name"],
-        "signalrank_top": signal_results[0]["name"],
-        "ranking_corrected": naive_results[0]["name"] != signal_results[0]["name"],
+        "naive_top": naive_top,
+        "signalrank_top": signal_top,
+        "ranking_corrected": naive_top != signal_top,
         "candidates": ranked,
     }
 

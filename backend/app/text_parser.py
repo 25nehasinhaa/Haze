@@ -3,62 +3,74 @@ import re
 
 from backend.app.schemas import CandidateProfile, CareerEvent, EvidenceItem, JobDescription
 
+# Canonical skill keywords — aligned with the skill names used by the real
+# JSONL dataset (see dataset_adapter.py) and the SignalRank alias map
+# (see src/scoring/signalrank.py SKILL_ALIASES) so that uploaded resumes,
+# uploaded job descriptions, and dataset candidates all score on the same
+# vocabulary.
 SKILL_KEYWORDS = [
-    "python",
-    "sql",
-    "machine learning",
-    "deep learning",
-    "fraud detection",
-    "anomaly detection",
-    "model deployment",
-    "model monitoring",
-    "mlops",
-    "aws",
-    "azure",
-    "gcp",
-    "docker",
-    "kubernetes",
-    "spark",
-    "airflow",
-    "stream processing",
-    "graph analytics",
-    "risk analytics",
-    "feature stores",
-    "nlp",
-    "computer vision",
-    "statistics",
-    "bayesian",
-    "optimization",
-    "pattern recognition",
+    # AI / retrieval / ranking (primary challenge skills)
+    "embeddings", "embedding", "semantic search", "vector search",
+    "vector database", "vector db", "information retrieval", "retrieval",
+    "hybrid search", "dense retrieval", "bm25",
+    "sentence transformers", "sentence-transformers", "sentence-transformers",
+    "hugging face transformers", "hugging face", "huggingface",
+    "recommendation systems", "recommendation", "ranking", "reranking",
+    "learning to rank", "learning-to-rank", "ndcg", "mrr",
+    "fine-tuning llms", "fine-tuning", "fine tuning", "lora", "qlora", "peft",
+    "langchain", "llms", "llm", "rag", "nlp",
+    "faiss", "pinecone", "qdrant", "weaviate", "milvus", "pgvector",
+    "elasticsearch", "opensearch",
+    "a/b testing", "a/b test", "ab testing",
+    # Core ML / data
+    "python", "sql", "machine learning", "deep learning", "tensorflow",
+    "pytorch", "xgboost", "reinforcement learning", "statistical modeling",
+    "data science", "computer vision", "statistics", "bayesian",
+    "optimization", "pattern recognition", "diffusion models",
+    # MLOps / infra
+    "mlops", "mlflow", "bentoml", "aws", "azure", "gcp", "docker",
+    "kubernetes", "spark", "airflow", "data pipelines", "databricks",
+    "stream processing", "graph analytics", "feature stores",
+    # Legacy fraud-detection JD support
+    "fraud detection", "anomaly detection", "model deployment",
+    "model monitoring", "risk analytics",
 ]
 
 DOMAIN_KEYWORDS = [
-    "fintech",
-    "payments",
-    "risk",
-    "banking",
-    "healthcare",
-    "ecommerce",
-    "retail",
-    "iot",
-    "telemetry",
-    "cloud",
-    "security",
-    "recruiting",
-    "hr",
+    "fintech", "payments", "risk", "banking", "healthcare", "ecommerce",
+    "e-commerce", "retail", "iot", "telemetry", "cloud", "security",
+    "recruiting", "hr-tech", "hr", "talent", "ai", "ml", "search",
+    "saas", "startup",
 ]
 
 BEHAVIORAL_KEYWORDS = [
-    "mentored",
-    "led",
-    "owned",
-    "collaborated",
-    "stakeholder",
-    "cross-functional",
-    "incident",
-    "communicated",
-    "presented",
+    "mentored", "mentoring", "led", "owned", "ownership", "collaborated",
+    "collaboration", "stakeholder", "cross-functional", "incident",
+    "communicated", "presented", "production", "shipped", "launched",
+    "architecture", "evaluation", "end-to-end",
 ]
+
+
+def extract_years_of_experience(text: str) -> float | None:
+    """
+    Extract stated years of experience from free text, e.g.
+    '6 years experience', '5+ years of experience', '8 yrs'.
+    Falls back to None if not found (caller should use career_events instead).
+    """
+    patterns = [
+        r"(\d+(?:\.\d+)?)\+?\s*years?\s+(?:of\s+)?experience",
+        r"(\d+(?:\.\d+)?)\+?\s*yrs?\s+(?:of\s+)?experience",
+        r"experience\s*[:\-]\s*(\d+(?:\.\d+)?)\+?\s*years?",
+    ]
+    lower = text.lower()
+    for pattern in patterns:
+        match = re.search(pattern, lower)
+        if match:
+            try:
+                return float(match.group(1))
+            except ValueError:
+                continue
+    return None
 
 
 def clean_text(text: str) -> str:
@@ -71,8 +83,18 @@ def extract_years(text: str) -> list[int]:
 
 
 def extract_skills(text: str) -> list[str]:
+    from src.scoring.signalrank import normalize_skill
     lower = text.lower()
-    return [skill for skill in SKILL_KEYWORDS if skill in lower]
+    found = [skill for skill in SKILL_KEYWORDS if skill in lower]
+    # Normalize to canonical names and dedupe while preserving order
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for skill in found:
+        canon = normalize_skill(skill)
+        if canon not in seen:
+            seen.add(canon)
+            normalized.append(canon)
+    return normalized
 
 
 def extract_domains(text: str) -> list[str]:
@@ -109,6 +131,7 @@ def parse_candidate_text(name: str, text: str) -> CandidateProfile:
     skills = extract_skills(text)
     domains = extract_domains(text)
     years = extract_years(text)
+    yoe = extract_years_of_experience(text)
     current_year = datetime.now().year
     last_year = max(years) if years else current_year
     evidence = [
@@ -135,6 +158,15 @@ def parse_candidate_text(name: str, text: str) -> CandidateProfile:
         for year in years[-4:]
     ] or [CareerEvent(year=current_year, event="Uploaded profile parsed by HAZE.")]
     summary = text[:360] + ("..." if len(text) > 360 else "")
+
+    # Try to extract a title from the first line (e.g. "Jane Doe - Senior AI Engineer")
+    first_line = text.split(".")[0][:120]
+    title_guess = ""
+    if " - " in first_line:
+        title_guess = first_line.split(" - ", 1)[1].split(",")[0].strip()
+    elif "," in first_line:
+        title_guess = first_line.split(",", 1)[1].split(",")[0].strip()
+
     return CandidateProfile(
         name=name,
         headline=f"Uploaded candidate profile: {name}",
@@ -143,24 +175,53 @@ def parse_candidate_text(name: str, text: str) -> CandidateProfile:
         domains=domains,
         evidence=evidence + behavioral_evidence,
         career_events=events,
+        years_of_experience=yoe,
+        current_title=title_guess,
     )
 
 
 def parse_job_description_text(text: str) -> JobDescription:
-    text = clean_text(text)
-    skills = extract_skills(text)
-    domains = extract_domains(text)
-    seniority = [keyword for keyword in BEHAVIORAL_KEYWORDS if keyword in text.lower()]
-    title_match = re.search(r"(?:title|role)\s*[:\-]\s*([A-Za-z0-9 ,/+&-]{4,80})", text, re.IGNORECASE)
+    """
+    Parse free-text job description into structured JobDescription.
+    Delegates skill/domain extraction to dataset_adapter._extract_jd_from_text,
+    the same logic used for DOCX-uploaded JDs and the official challenge JD,
+    so every JD entry point (typed text, uploaded text, uploaded DOCX,
+    official dataset JD) produces skills on the same canonical vocabulary
+    that SignalRank and the dataset candidates use.
+    """
+    from backend.app.dataset_adapter import _extract_jd_from_text
+
+    cleaned = clean_text(text)
+    title_match = re.search(r"(?:title|role)\s*[:\-]\s*([A-Za-z0-9 ,/+&-]{4,80})", cleaned, re.IGNORECASE)
     title = title_match.group(1).strip() if title_match else "Uploaded Hiring Role"
-    must_have = skills[:8] or ["python", "machine learning", "sql"]
-    nice_to_have = [skill for skill in skills[8:14] if skill not in must_have]
+
+    jd_dict = _extract_jd_from_text(title, cleaned)
+
+    # Layer in behavioral seniority signals detected directly in the text
+    # (dataset_adapter's extractor uses a different signal list tuned for
+    # the AI Engineer JD; this adds resume/JD-upload-specific signals too).
+    extra_signals = [keyword for keyword in BEHAVIORAL_KEYWORDS if keyword in cleaned.lower()]
+    combined_signals = list(dict.fromkeys(jd_dict["seniority_signals"] + extra_signals))[:10]
+
     return JobDescription(
-        title=title,
-        summary=text[:420] + ("..." if len(text) > 420 else ""),
-        must_have_skills=must_have,
-        nice_to_have_skills=nice_to_have,
-        domains=domains,
-        seniority_signals=seniority,
+        title=jd_dict["title"],
+        summary=jd_dict["summary"],
+        must_have_skills=jd_dict["must_have_skills"],
+        nice_to_have_skills=jd_dict["nice_to_have_skills"],
+        domains=jd_dict["domains"] or extract_domains(cleaned),
+        seniority_signals=combined_signals,
     )
 
+
+
+def parse_pdf_bytes(pdf_bytes: bytes) -> str:
+    """Extract plain text from PDF bytes using pdfminer.six."""
+    try:
+        from pdfminer.high_level import extract_text_to_fp
+        from pdfminer.layout import LAParams
+        import io
+        output = io.StringIO()
+        extract_text_to_fp(io.BytesIO(pdf_bytes), output, laparams=LAParams())
+        return output.getvalue()
+    except Exception:
+        return pdf_bytes.decode("utf-8", errors="ignore")

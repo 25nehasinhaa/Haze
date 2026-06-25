@@ -26,3 +26,26 @@ class CandidateRetriever:
         )
         return ranked[:top_k] if top_k else ranked
 
+
+# ---------------------------------------------------------------------------
+# Process-level cache: building the TF-IDF index over 100k candidate
+# documents costs ~20s. Cache the fitted retriever keyed by the identity of
+# the candidate list object (id()) plus its length, so repeated calls with
+# the same (cached) candidate list reuse the index instead of rebuilding it.
+# ---------------------------------------------------------------------------
+
+_RETRIEVER_CACHE: dict[tuple, "CandidateRetriever"] = {}
+
+
+def get_cached_retriever(candidates: list[dict]) -> CandidateRetriever:
+    key = (id(candidates), len(candidates))
+    if key not in _RETRIEVER_CACHE:
+        retriever = CandidateRetriever()
+        retriever.index(candidates)
+        _RETRIEVER_CACHE[key] = retriever
+    return _RETRIEVER_CACHE[key]
+
+
+def clear_retriever_cache() -> None:
+    _RETRIEVER_CACHE.clear()
+
