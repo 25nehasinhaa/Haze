@@ -36,10 +36,21 @@ export type RankingResponse = {
   metrics: Record<string, number>;
 };
 
+export type ActionPlan = {
+  immediate: string[];
+  next_30_days: string[];
+  next_90_days: string[];
+};
+
 export type CareerCoachResult = {
   name: string;
   target_role: string;
   match_score: number;
+  ats_score: number;
+  recruiter_confidence: number;
+  interview_probability: number;
+  offer_probability: number;
+  expected_score_after_improvements: number;
   trust_label: string;
   recommendation: string;
   recruiter_likelihood: string;
@@ -49,10 +60,16 @@ export type CareerCoachResult = {
   gaps: { skill: string; type: string }[];
   missing_must_have: string[];
   missing_nice_to_have: string[];
+  missing_keywords: string[];
+  missing_technologies: string[];
   weak_skills: string[];
   strong_skills: string[];
   resume_suggestions: string[];
+  suggested_certifications: string[];
+  suggested_projects: string[];
   learning_roadmap: { priority: number; skill: string; action: string; timeline: string; impact: string }[];
+  interview_prep_topics: string[];
+  action_plan: ActionPlan;
   interview_probes: string[];
   risk_flags: string[];
   parsed_skills: string[];
@@ -60,5 +77,5 @@ export type CareerCoachResult = {
   current_title?: string;
 };
 
-export type AppMode = "home" | "ranking" | "coach" | "compare";
-export type RankingTab = "list" | "detail" | "explain" | "analytics";
+export type AppMode = "home" | "ranking" | "coach";
+export type RankingTab = "detail" | "explain" | "analytics";

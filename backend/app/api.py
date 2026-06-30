@@ -409,10 +409,96 @@ async def career_coach(
     if len(candidate.get("career_events", [])) < 2:
         suggestions.append("Expand your career history section with clear role titles, companies, dates, and outcome-driven bullets.")
 
+    # ── Extended metrics ────────────────────────────────────────────────────
+    snr = result.get("snr", 0)
+    confidence_score = result.get("confidence", 0)
+    evidence_items = candidate.get("evidence", [])
+    unsupported = [e["claim"] for e in evidence_items if e.get("level") == "unsupported"]
+
+    ats_score = min(100, round(
+        len(candidate_skills_set.intersection({normalize_skill(s) for s in must_have + nice_to_have}))
+        / max(len(must_have), 1) * 100
+    ))
+    recruiter_confidence = round(min(100, signal_score * 0.5 + confidence_score * 0.3 + min(snr * 50, 30) * 0.2))
+    interview_prob = round(min(95, max(5, recruiter_confidence * 0.9 - len(result.get("gaps", [])) * 5)))
+    offer_prob = round(min(80, max(2, interview_prob * 0.55 - len(missing_must) * 4)))
+    max_improvement = min(40, len(missing_must) * 7 + len(suggestions) * 3)
+    expected_score_after = min(99, round(signal_score + max_improvement))
+
+    resume_text_lower = rtext.lower()
+    all_jd_terms = must_have + nice_to_have + jd.get("seniority_signals", []) + jd.get("domains", [])
+    missing_keywords = [t for t in all_jd_terms if normalize_skill(t) not in candidate_skills_set and t.lower() not in resume_text_lower][:8]
+
+    tech_markers = ["faiss","pinecone","qdrant","weaviate","elasticsearch","langchain","sentence transformers","hugging face","pytorch","tensorflow","xgboost","mlflow","docker","kubernetes","airflow","spark"]
+    missing_technologies = [t for t in missing_must + missing_nice if any(m in t.lower() for m in tech_markers)][:6]
+
+    cert_map = {
+        "machine learning": "Google ML Professional Certificate",
+        "embeddings": "Hugging Face NLP Course (free)",
+        "information retrieval": "Coursera — Text Retrieval and Search Engines",
+        "recommendation systems": "Coursera — Recommender Systems Specialization",
+        "vector search": "Pinecone / Weaviate free certification",
+        "learning to rank": "LTR with XGBoost (Kaggle Learn)",
+        "fine-tuning llms": "DeepLearning.AI — Finetuning LLMs Short Course",
+        "langchain": "LangChain Official Certification",
+        "mlops": "MLOps Specialization — DeepLearning.AI",
+        "sql": "Mode SQL Tutorial or StrataScratch Premium",
+        "anomaly detection": "Coursera — Anomaly Detection in Time Series",
+        "fraud detection": "Kaggle Fraud Detection Competition",
+        "semantic search": "Hugging Face Semantic Search Course",
+        "nlp": "Stanford CS224N (free on YouTube)",
+    }
+    suggested_certs = list(dict.fromkeys(cert_map.get(normalize_skill(s)) for s in missing_must + missing_nice if normalize_skill(s) in cert_map if cert_map.get(normalize_skill(s))))[:5]
+
+    project_map = {
+        "embeddings": "Semantic document search engine with sentence-transformers + FAISS",
+        "vector search": "Deploy Qdrant/Weaviate, benchmark ANN retrieval with BEIR",
+        "information retrieval": "Hybrid BM25 + dense retrieval with BEIR benchmark evaluation",
+        "recommendation systems": "Collaborative filtering + content-based recommender on MovieLens",
+        "learning to rank": "XGBoost LTR model on MSLR dataset, measure NDCG@10",
+        "fine-tuning llms": "Fine-tune Mistral-7B on domain data using LoRA/QLoRA",
+        "langchain": "End-to-end RAG chatbot with LangChain + FAISS + evaluation framework",
+        "semantic search": "Production semantic search API with Elasticsearch + embeddings",
+        "sentence transformers": "Cross-encoder re-ranking pipeline with BEIR evaluation",
+        "nlp": "NER + classification pipeline on a domain-specific corpus",
+    }
+    suggested_projects = list(dict.fromkeys(project_map.get(normalize_skill(s)) for s in missing_must + missing_nice if normalize_skill(s) in project_map if project_map.get(normalize_skill(s))))[:4]
+
+    interview_topics = []
+    for skill in (strong_skills or list(candidate_skills_set))[:4]:
+        interview_topics.append(f"Deep-dive: {skill} — implementation details, trade-offs, and production lessons")
+    for gap in result.get("gaps", [])[:3]:
+        interview_topics.append(f"Address gap in {gap['skill']} — prepare a transferable answer or ramp plan")
+    interview_topics = interview_topics[:8]
+
+    action_plan = {
+        "immediate": list(filter(None, [
+            "Add quantified metrics to top 3 bullet points (%, scale, latency, revenue impact).",
+            "Tailor your resume summary to match the target role title and 2 key skills.",
+            f"Verify or remove unsubstantiated claims: {', '.join(unsupported[:2])}" if unsupported else None,
+        ]))[:3],
+        "next_30_days": list(filter(None, [
+            f"Build a project demonstrating: {missing_must[0]}" if missing_must else None,
+            f"Complete: {suggested_certs[0]}" if suggested_certs else None,
+            "Add 2–3 production-level outcome bullets per role with numbers.",
+        ]))[:3],
+        "next_90_days": list(filter(None, [
+            f"Build portfolio project: {suggested_projects[0]}" if suggested_projects else None,
+            "Contribute to an open-source project in your target domain.",
+            f"Earn: {suggested_certs[1]}" if len(suggested_certs) > 1 else None,
+            "Apply to 10 target roles after resume improvements.",
+        ]))[:3],
+    }
+
     return {
         "name": name,
         "target_role": jd.get("title", "Target Role"),
         "match_score": round(signal_score, 1),
+        "ats_score": ats_score,
+        "recruiter_confidence": recruiter_confidence,
+        "interview_probability": interview_prob,
+        "offer_probability": offer_prob,
+        "expected_score_after_improvements": expected_score_after,
         "trust_label": result.get("trust_label", ""),
         "recommendation": result.get("recommendation", ""),
         "recruiter_likelihood": recruiter_likelihood,
@@ -422,10 +508,16 @@ async def career_coach(
         "gaps": result.get("gaps", []),
         "missing_must_have": missing_must,
         "missing_nice_to_have": missing_nice,
+        "missing_keywords": missing_keywords,
+        "missing_technologies": missing_technologies,
         "weak_skills": weak_skills,
         "strong_skills": strong_skills,
         "resume_suggestions": suggestions,
+        "suggested_certifications": suggested_certs,
+        "suggested_projects": suggested_projects,
         "learning_roadmap": roadmap,
+        "interview_prep_topics": interview_topics,
+        "action_plan": action_plan,
         "interview_probes": result.get("interview_probes", []),
         "risk_flags": result.get("risk_flags", []),
         "parsed_skills": candidate.get("skills", []),
