@@ -149,6 +149,22 @@ function DropZone({ label, accept, multiple=false, files, onChange, compact=fals
   );
 }
 
+
+// ── Hire Recommendation Badge ─────────────────────────────────────────────────
+function HireBadge({ recommendation }: { recommendation: "HIRE" | "CONSIDER" | "REJECT" }) {
+  const map = {
+    HIRE: { cls: "badge-hire", icon: "✓", label: "HIRE" },
+    CONSIDER: { cls: "badge-consider", icon: "⟳", label: "CONSIDER" },
+    REJECT: { cls: "badge-reject", icon: "✕", label: "REJECT" },
+  };
+  const { cls, icon, label } = map[recommendation] || map.CONSIDER;
+  return (
+    <span className={`${cls} inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs uppercase tracking-widest`}>
+      <span>{icon}</span> {label}
+    </span>
+  );
+}
+
 // ── Section card helper ───────────────────────────────────────────────────────
 function SectionCard({ title, icon, accent, children }: { title:string;icon:React.ReactNode;accent?:string;children:React.ReactNode }) {
   const col=accent||ACCENT;
@@ -299,7 +315,7 @@ function RankingWorkspace({ onSelect }: { onSelect:(c:CandidateRank,d:RankingRes
           <motion.button onClick={run} disabled={loading} whileHover={{scale:1.02}} whileTap={{scale:.97}}
             className="btn-accent inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold disabled:opacity-40">
             {loading?<Loader2 size={14} className="animate-spin"/>:<Zap size={14}/>}
-            {loading?"Ranking…":"Run SignalRank"}
+            {loading?"Analysing 100k candidates…":"Run SignalRank"}
           </motion.button>
         </div>
         <AnimatePresence>
@@ -327,6 +343,16 @@ function RankingWorkspace({ onSelect }: { onSelect:(c:CandidateRank,d:RankingRes
       </div>
 
       {loading&&<div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">{Array.from({length:6}).map((_,i)=><Skeleton key={i}/>)}</div>}
+
+      {!data&&!loading&&(
+        <div className="empty-state">
+          <div className="flex h-20 w-20 items-center justify-center rounded-3xl mb-5" style={{background:"rgba(255,109,41,0.08)",border:"1px solid rgba(255,109,41,0.15)"}}>
+            <Zap size={36} style={{color:"rgba(255,109,41,0.5)"}}/>
+          </div>
+          <h3 className="text-xl font-black text-white mb-2">Ready to rank</h3>
+          <p className="text-sm text-neutral-600 max-w-sm">Choose a source and click <strong className="text-orange-400">Run SignalRank</strong> to surface the best candidates using evidence-based scoring.</p>
+        </div>
+      )}
 
       {data&&!loading&&(
         <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-4">
@@ -377,10 +403,10 @@ function RankingWorkspace({ onSelect }: { onSelect:(c:CandidateRank,d:RankingRes
           {/* Candidate list */}
           <div className="space-y-2.5">
             {filtered.map((c,i)=>(
-              <TiltCard key={c.name+c.rank} className="card-editorial cursor-pointer p-5">
+              <TiltCard key={c.name+c.rank} className="card-editorial cursor-pointer p-5 group transition-all duration-200">
                 <div className="flex items-center gap-4" onClick={()=>onSelect(c,data)}>
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-lg font-black"
-                    style={{background:"rgba(255,109,41,0.1)",color:ACCENT,border:"1px solid rgba(255,109,41,0.18)"}}>
+                    style={{background:"rgba(255,109,41,0.1)",color:ACCENT,border:"1px solid rgba(255,109,41,0.18)"}} className="transition-all duration-200 group-hover:shadow-glow">
                     {c.rank}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -684,7 +710,7 @@ function CareerCoach() {
           </div>
           <div>
             <h2 className="text-xl font-black text-white">AI Career Coach</h2>
-            <p className="text-sm text-neutral-600">Recruiter-grade analysis: ATS score, skill gaps, roadmap, action plan</p>
+            <p className="text-sm text-neutral-600">Paste your resume + target JD → get ATS score, skill gaps, roadmap, interview prep, and action plan in seconds</p>
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
@@ -722,7 +748,10 @@ function CareerCoach() {
                 <p className="text-sm text-neutral-600 mb-1">{result.target_role}</p>
                 <h2 className="text-3xl font-black text-white mb-1" style={{letterSpacing:"-0.04em"}}>{result.name}</h2>
                 {result.current_title&&<p className="text-neutral-500 text-sm mb-3">{result.current_title}</p>}
+                <div className="flex flex-wrap items-center gap-2 mt-2">
                 <TrustBadge label={result.trust_label}/>
+                {result.hire_recommendation && <HireBadge recommendation={result.hire_recommendation}/>}
+              </div>
                 <p className="mt-3 text-sm text-neutral-400 leading-6 max-w-lg">{result.recruiter_likelihood}</p>
               </div>
               {/* 4 gauge meters */}

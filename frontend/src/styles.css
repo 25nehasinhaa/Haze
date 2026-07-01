@@ -275,3 +275,95 @@ body::before {
   border-top: 1px solid rgba(255,255,255,0.07);
   margin: 0;
 }
+
+/* Hire/Consider/Reject badges */
+.badge-hire {
+  background: rgba(74,222,128,0.12);
+  border: 1.5px solid rgba(74,222,128,0.35);
+  color: #4ade80;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 12px rgba(74,222,128,0.4);
+}
+.badge-consider {
+  background: rgba(245,158,11,0.12);
+  border: 1.5px solid rgba(245,158,11,0.35);
+  color: #f59e0b;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 12px rgba(245,158,11,0.4);
+}
+.badge-reject {
+  background: rgba(239,68,68,0.12);
+  border: 1.5px solid rgba(239,68,68,0.3);
+  color: #ef4444;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 12px rgba(239,68,68,0.35);
+}
+
+/* Floating card with ambient light */
+.card-float {
+  background: linear-gradient(160deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 
+    0 1px 0 0 rgba(255,255,255,0.07) inset,
+    0 0 0 1px rgba(255,255,255,0.04),
+    0 8px 24px rgba(0,0,0,0.4),
+    0 32px 80px rgba(0,0,0,0.5);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* Pulse dot for live indicators */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Smooth number counter */
+.counter { font-variant-numeric: tabular-nums; }
+
+/* Premium input focus ring */
+.input-field:focus {
+  box-shadow: 0 0 0 3px rgba(255,109,41,0.12);
+}
+
+/* Better scrollbar for modals */
+.custom-scroll::-webkit-scrollbar { width: 3px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,109,41,0.3); border-radius: 3px; }
+
+/* Insight card hover */
+.insight-card {
+  transition: background 0.2s, border-color 0.2s;
+}
+.insight-card:hover {
+  background: rgba(255,109,41,0.08) !important;
+  border-color: rgba(255,109,41,0.2) !important;
+}
+
+/* Radial chart background */
+.chart-container {
+  position: relative;
+}
+.chart-container::before {
+  content: '';
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,109,41,0.04), transparent 70%);
+  pointer-events: none;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}

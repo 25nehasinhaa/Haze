@@ -25,25 +25,38 @@ router = APIRouter()
 
 def _extract_name_from_resume(text: str) -> str | None:
     """
-    Extract a candidate's name from the first non-empty line of a resume.
-    Handles common patterns: "Jane Doe - Title", "Jane Doe, Title", "Jane Doe".
-    Returns None if no plausible name-like line is found.
+    Extract candidate name from resume first line.
+    Handles: "Jane Doe", "Jane Doe - Title", "JANE DOE", "jane doe", "Jane Doe Senior Engineer".
     """
     import re as _re
 
-    first_line = text.strip().split("\n")[0].strip()
-    if not first_line:
-        return None
-    # Strip trailing " - ..." or ", ..." description
-    for sep in [" - ", ", "]:
-        if sep in first_line:
-            first_line = first_line.split(sep, 1)[0].strip()
-            break
-    # Plausible name: 2-4 title-case words, no digits
-    words = first_line.split()
-    if 1 < len(words) <= 4 and not any(ch.isdigit() for ch in first_line):
-        if all(w[0].isupper() for w in words if w):
-            return first_line[:60]
+    # Try first non-empty line
+    for raw_line in text.strip().split("\n")[:3]:
+        first_line = raw_line.strip()
+        if not first_line:
+            continue
+
+        # Strip trailing role/title after separators
+        for sep in [" - ", " | ", ", ", " — "]:
+            if sep in first_line:
+                first_line = first_line.split(sep, 1)[0].strip()
+                break
+
+        # Remove common resume headers
+        if any(first_line.lower().startswith(h) for h in ["resume", "cv", "curriculum", "profile", "name:"]):
+            first_line = _re.sub(r'^[^:]+:\s*', '', first_line, flags=_re.IGNORECASE)
+
+        words = first_line.split()
+        if len(words) < 2 or len(words) > 5:
+            continue
+        if any(ch.isdigit() for ch in first_line):
+            continue
+        # Accept title-case, all-caps, or all-lowercase (normalise to title)
+        normalised = " ".join(w.capitalize() for w in words)
+        all_alpha_words = all(_re.match(r"^[A-Za-z][a-zA-Z'-]*$", w) for w in words)
+        if all_alpha_words:
+            return normalised[:60]
+
     return None
 
 
@@ -116,7 +129,7 @@ def text_rank(request: TextRankingRequest) -> dict:
 
 @router.post("/rank-dataset")
 def rank_dataset(
-    top_k: int = Query(default=100, ge=10, le=5000),
+    top_k: int = Query(default=100, ge=1, le=5000),
     filter_open_to_work: bool = Query(default=False),
 ) -> dict:
     """
@@ -370,10 +383,16 @@ async def career_coach(
     signal_score = result.get("signal_score", 0)
     if signal_score >= 70:
         recruiter_likelihood = "High — Strong profile match, likely to pass ATS and recruiter screen."
+        hire_recommendation = "HIRE"
+        hire_color = "green"
     elif signal_score >= 50:
         recruiter_likelihood = "Medium — Competitive but has addressable gaps. Target roles before upskilling."
+        hire_recommendation = "CONSIDER"
+        hire_color = "amber"
     else:
         recruiter_likelihood = "Low — Significant skill gaps. Prioritize learning roadmap before applying."
+        hire_recommendation = "REJECT"
+        hire_color = "red"
 
     # Build learning roadmap
     roadmap = []
@@ -502,6 +521,8 @@ async def career_coach(
         "trust_label": result.get("trust_label", ""),
         "recommendation": result.get("recommendation", ""),
         "recruiter_likelihood": recruiter_likelihood,
+        "hire_recommendation": hire_recommendation,
+        "hire_color": hire_color,
         "skill_scores": skill_scores,
         "strengths": result.get("strengths", []),
         "concerns": result.get("concerns", []),

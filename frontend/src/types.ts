@@ -54,6 +54,8 @@ export type CareerCoachResult = {
   trust_label: string;
   recommendation: string;
   recruiter_likelihood: string;
+  hire_recommendation: "HIRE" | "CONSIDER" | "REJECT";
+  hire_color: "green" | "amber" | "red";
   skill_scores: Record<string, number>;
   strengths: string[];
   concerns: string[];
