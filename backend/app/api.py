@@ -394,24 +394,42 @@ async def career_coach(
         hire_recommendation = "REJECT"
         hire_color = "red"
 
-    # Build learning roadmap
+    # Build learning roadmap — covers missing must-haves, weak skills, and nice-to-haves
     roadmap = []
-    for i, skill in enumerate(missing_must[:5], 1):
+    priority = 1
+
+    # 1. Missing must-have skills (highest priority)
+    for skill in missing_must[:4]:
         roadmap.append({
-            "priority": i,
+            "priority": priority,
             "skill": skill,
-            "action": f"Build hands-on project using {skill}",
+            "action": f"Build hands-on project using {skill} — add to GitHub portfolio",
             "timeline": "2-4 weeks",
             "impact": "High — Required by JD"
         })
-    for i, skill in enumerate(missing_nice[:3], len(missing_must[:5]) + 1):
+        priority += 1
+
+    # 2. Weak skills (skills present but low score — need deeper evidence)
+    for skill in weak_skills[:3]:
         roadmap.append({
-            "priority": i,
+            "priority": priority,
             "skill": skill,
-            "action": f"Add {skill} to side project or portfolio",
+            "action": f"Deepen {skill} with a production-scale project and add quantified metrics to resume",
+            "timeline": "3-6 weeks",
+            "impact": "High — Evidence gap"
+        })
+        priority += 1
+
+    # 3. Nice-to-have gaps (differentiators)
+    for skill in missing_nice[:2]:
+        roadmap.append({
+            "priority": priority,
+            "skill": skill,
+            "action": f"Add {skill} to an existing project or build a standalone demo",
             "timeline": "1-2 months",
             "impact": "Medium — Differentiator"
         })
+        priority += 1
 
     # Resume improvement suggestions
     evidence_items = candidate.get("evidence", [])
@@ -452,6 +470,7 @@ async def career_coach(
     missing_technologies = [t for t in missing_must + missing_nice if any(m in t.lower() for m in tech_markers)][:6]
 
     cert_map = {
+        # AI / ML
         "machine learning": "Google ML Professional Certificate",
         "embeddings": "Hugging Face NLP Course (free)",
         "information retrieval": "Coursera — Text Retrieval and Search Engines",
@@ -461,15 +480,39 @@ async def career_coach(
         "fine-tuning llms": "DeepLearning.AI — Finetuning LLMs Short Course",
         "langchain": "LangChain Official Certification",
         "mlops": "MLOps Specialization — DeepLearning.AI",
+        "nlp": "Stanford CS224N (free on YouTube)",
+        "semantic search": "Hugging Face Semantic Search Course",
+        # Data Engineering
+        "pyspark": "Databricks Certified Associate Developer for Apache Spark",
+        "databricks": "Databricks Data Engineer Professional",
+        "snowflake": "SnowPro Advanced: Data Engineer",
+        "dbt": "dbt Fundamentals (free) + dbt Analytics Engineering",
+        "data modeling": "Kimball Group Data Warehouse Toolkit (book + course)",
+        "data warehousing": "Google Professional Data Engineer Certification",
+        "gcp": "Google Professional Data Engineer Certification",
+        "aws": "AWS Certified Data Engineer Associate",
+        "azure": "Microsoft DP-203: Data Engineering on Azure",
+        "apache flink": "Apache Flink Fundamentals (Confluent/Ververica free)",
+        "hive": "Cloudera Certified Associate (CCA) Data Analyst",
+        "kafka": "Confluent Certified Developer for Apache Kafka",
+        "airflow": "Astronomer Certification for Apache Airflow DAG Authoring",
+        "etl": "Google Professional Data Engineer Certification",
         "sql": "Mode SQL Tutorial or StrataScratch Premium",
+        "tableau": "Tableau Desktop Specialist",
         "anomaly detection": "Coursera — Anomaly Detection in Time Series",
         "fraud detection": "Kaggle Fraud Detection Competition",
-        "semantic search": "Hugging Face Semantic Search Course",
-        "nlp": "Stanford CS224N (free on YouTube)",
+        "agentic ai": "DeepLearning.AI — AI Agents in LangGraph",
+        "llms": "DeepLearning.AI — LLMOps Short Course",
+        "rag": "DeepLearning.AI — Building Systems with the ChatGPT API",
     }
-    suggested_certs = list(dict.fromkeys(cert_map.get(normalize_skill(s)) for s in missing_must + missing_nice if normalize_skill(s) in cert_map if cert_map.get(normalize_skill(s))))[:5]
+    suggested_certs = list(dict.fromkeys(
+        cert_map.get(normalize_skill(s))
+        for s in missing_must + weak_skills + missing_nice
+        if normalize_skill(s) in cert_map and cert_map.get(normalize_skill(s))
+    ))[:5]
 
     project_map = {
+        # AI / ML
         "embeddings": "Semantic document search engine with sentence-transformers + FAISS",
         "vector search": "Deploy Qdrant/Weaviate, benchmark ANN retrieval with BEIR",
         "information retrieval": "Hybrid BM25 + dense retrieval with BEIR benchmark evaluation",
@@ -477,11 +520,27 @@ async def career_coach(
         "learning to rank": "XGBoost LTR model on MSLR dataset, measure NDCG@10",
         "fine-tuning llms": "Fine-tune Mistral-7B on domain data using LoRA/QLoRA",
         "langchain": "End-to-end RAG chatbot with LangChain + FAISS + evaluation framework",
-        "semantic search": "Production semantic search API with Elasticsearch + embeddings",
-        "sentence transformers": "Cross-encoder re-ranking pipeline with BEIR evaluation",
-        "nlp": "NER + classification pipeline on a domain-specific corpus",
+        "agentic ai": "Multi-agent orchestration system: GitHub + Slack + Sentry incident triage",
+        "llms": "LLM-powered SQL query generator over a warehouse schema",
+        "rag": "Production RAG pipeline with hybrid retrieval, reranking, and eval framework",
+        # Data Engineering
+        "pyspark": "End-to-end Spark ETL pipeline: raw → silver → gold on Databricks / Delta Lake",
+        "databricks": "Medallion architecture data lake on Databricks with Delta Live Tables",
+        "snowflake": "Snowflake ELT pipeline: Snowpark + dbt + SnowPro-style monitoring",
+        "dbt": "dbt data transformation project: staging → marts with tests and documentation",
+        "data modeling": "Star schema data warehouse for e-commerce analytics on BigQuery",
+        "apache flink": "Real-time streaming ETL with Flink: Kafka → Delta Lake with CDC",
+        "kafka": "Kafka-based event streaming pipeline: producers → topics → Spark consumer",
+        "airflow": "Airflow DAG orchestration: ELT pipeline with SLA monitoring and alerts",
+        "data governance": "Great Expectations + dbt test suite: data quality framework from scratch",
+        "gcp": "GCP data pipeline: Cloud Dataflow + BigQuery + Looker Studio dashboard",
+        "tableau": "Tableau dashboard: supply chain + inventory analytics with live DB connection",
     }
-    suggested_projects = list(dict.fromkeys(project_map.get(normalize_skill(s)) for s in missing_must + missing_nice if normalize_skill(s) in project_map if project_map.get(normalize_skill(s))))[:4]
+    suggested_projects = list(dict.fromkeys(
+        project_map.get(normalize_skill(s))
+        for s in missing_must + weak_skills + missing_nice
+        if normalize_skill(s) in project_map and project_map.get(normalize_skill(s))
+    ))[:4]
 
     interview_topics = []
     for skill in (strong_skills or list(candidate_skills_set))[:4]:

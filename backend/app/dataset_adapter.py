@@ -313,61 +313,94 @@ def parse_jd_docx(docx_path: Path) -> dict:
 
 
 def _extract_jd_from_text(title: str, text: str) -> dict:
-    """Parse structured JD fields from raw text."""
+    """Parse structured JD fields from raw text. Handles AI/ML and Data Engineering roles."""
     import re
 
     text_lower = text.lower()
 
-    # Core ML/AI skills — use names that match the actual dataset skill names
-    MUST_HAVE_CANDIDATES = [
+    # Auto-detect a better title from first non-empty line if title is generic
+    if title in ("Uploaded Hiring Role", "Target Role"):
+        for line in text.strip().splitlines()[:5]:
+            line = line.strip()
+            if line and 5 < len(line) < 100 and not line.startswith(("http","www","•","-")):
+                # Clean common prefixes
+                cleaned = re.sub(r'^(job title|role|position)[:\-]\s*', '', line, flags=re.IGNORECASE).strip()
+                if cleaned:
+                    title = cleaned[:80]
+                    break
+
+    # Combined AI/ML + Data Engineering skill patterns
+    ALL_SKILLS = [
+        # AI / ML / Retrieval
         ("embeddings", ["embedding", "embeddings"]),
         ("semantic search", ["semantic search"]),
-        ("vector search", ["vector search", "vector database", "vector db", "faiss", "pinecone", "qdrant", "weaviate", "milvus", "pgvector", "opensearch", "elasticsearch"]),
-        ("information retrieval", ["retrieval", "information retrieval", "bm25", "hybrid search"]),
-        ("python", ["python"]),
-        ("recommendation systems", ["recommendation", "ranking", "rerank"]),
-        ("sentence transformers", ["sentence-transformers", "sentence transformers", "bge", "e5 model"]),
+        ("vector search", ["vector search", "vector database", "faiss", "pinecone", "qdrant", "weaviate", "milvus", "pgvector"]),
+        ("information retrieval", ["information retrieval", "bm25", "hybrid search"]),
+        ("recommendation systems", ["recommendation system", "recommender", "rerank"]),
+        ("sentence transformers", ["sentence-transformers", "sentence transformers", "bge"]),
         ("fine-tuning llms", ["fine-tun", "lora", "qlora", "peft", "finetuning"]),
         ("nlp", ["nlp", "natural language processing"]),
-        ("learning to rank", ["learning to rank", "learning-to-rank", "ndcg", "mrr", "evaluation framework", "offline eval"]),
-        ("langchain", ["langchain", "llm framework", "rag"]),
-        ("faiss", ["faiss", "ann", "approximate nearest"]),
-    ]
-    NICE_TO_HAVE_CANDIDATES = [
-        ("hugging face transformers", ["hugging face", "transformers library"]),
-        ("elasticsearch", ["elasticsearch", "opensearch"]),
-        ("machine learning", ["machine learning", "ml engineering"]),
-        ("a/b testing", ["a/b test", "ab test", "online eval"]),
-        ("xgboost", ["xgboost", "gradient boost", "lgbm"]),
-        ("llms", ["llm", "large language model", "gpt", "openai"]),
+        ("learning to rank", ["learning to rank", "learning-to-rank", "ndcg", "mrr"]),
+        ("langchain", ["langchain", "llm framework"]),
+        ("machine learning", ["machine learning", " ml ", "ml engineer"]),
+        ("agentic ai", ["agentic ai", "ai agent", "ai agents"]),
+        ("llms", ["large language model", " llm", "llms", "gpt-", "openai"]),
+        ("rag", ["retrieval augmented", "\brag\b"]),
+        # Data Engineering
+        ("python", ["\bpython\b"]),
+        ("sql", ["\bsql\b", "\bt-sql\b", "\bplsql\b"]),
+        ("pyspark", ["pyspark", "\bspark\b", "apache spark"]),
+        ("etl", ["\betl\b", "\belt\b", "data pipeline", "data pipelines"]),
+        ("databricks", ["databricks"]),
+        ("snowflake", ["snowflake"]),
+        ("delta lake", ["delta lake"]),
+        ("dbt", ["\bdbt\b", "data build tool"]),
+        ("data modeling", ["data model", "dimensional model", "star schema", "data vault"]),
+        ("data warehousing", ["data warehouse", "data warehousing", "dwh"]),
+        ("apache flink", ["flink", "apache flink"]),
+        ("hive", ["\bhive\b", "apache hive"]),
+        ("data governance", ["data governance", "data quality", "data validation"]),
+        ("tableau", ["tableau"]),
+        ("looker", ["looker"]),
+        ("gcp", ["\bgcp\b", "google cloud platform", "bigquery"]),
+        ("aws", ["\baws\b", "amazon web services", "s3", "redshift"]),
+        ("azure", ["\bazure\b", "azure synapse", "azure data factory"]),
+        ("ci/cd", ["ci/cd", "cicd", "github actions", "jenkins", "devops"]),
+        ("git", ["\bgit\b", "github", "gitlab", "bitbucket"]),
+        ("kafka", ["kafka", "apache kafka"]),
+        ("airflow", ["airflow", "apache airflow"]),
     ]
 
     must_have = []
-    for canonical, patterns in MUST_HAVE_CANDIDATES:
-        if any(p in text_lower for p in patterns):
+    nice_to_have = []
+
+    for canonical, patterns in ALL_SKILLS:
+        matched = any(re.search(p, text_lower) for p in patterns)
+        if matched:
             must_have.append(canonical)
+
+    # Keep top 10 must-have, rest as nice-to-have
+    nice_to_have = must_have[10:][:6]
     must_have = must_have[:10]
 
-    nice_to_have = []
-    for canonical, patterns in NICE_TO_HAVE_CANDIDATES:
-        if any(p in text_lower for p in patterns):
-            nice_to_have.append(canonical)
-    nice_to_have = nice_to_have[:6]
-
     if not must_have:
-        must_have = ["python", "machine learning", "nlp", "information retrieval", "recommendation systems"]
+        must_have = ["python", "sql", "data pipelines", "machine learning"]
 
     # Domains
-    DOMAIN_CANDIDATES = [
-        "recruiting", "hr-tech", "talent", "fintech", "payments", "ai", "ml",
-        "search", "recommendation", "startup",
-    ]
-    domains = [d for d in DOMAIN_CANDIDATES if d in text_lower]
+    DOMAIN_MAP = {
+        "fintech": ["fintech", "financial", "banking", "payments"],
+        "ecommerce": ["ecommerce", "e-commerce", "retail", "fashion", "merchandise"],
+        "ai": ["artificial intelligence", "ai platform", "machine learning platform"],
+        "data": ["data platform", "data engineering", "data science"],
+        "cloud": ["cloud native", "cloud platform"],
+        "healthcare": ["healthcare", "health tech"],
+        "recruiting": ["recruiting", "hr-tech", "talent", "hiring"],
+    }
+    domains = [d for d, patterns in DOMAIN_MAP.items() if any(p in text_lower for p in patterns)]
 
-    # Seniority signals
     seniority_signals = []
-    for signal in ["production deployment", "end-to-end", "mentoring", "architecture",
-                   "cross-functional", "evaluation", "a/b test", "own the"]:
+    for signal in ["lead", "mentor", "code review", "cross-functional", "architect",
+                   "senior", "principal", "10+ years", "production", "root cause"]:
         if signal in text_lower:
             seniority_signals.append(signal)
 

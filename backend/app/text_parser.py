@@ -34,6 +34,24 @@ SKILL_KEYWORDS = [
     # Legacy fraud-detection JD support
     "fraud detection", "anomaly detection", "model deployment",
     "model monitoring", "risk analytics",
+    # Data Engineering
+    "etl", "elt", "data pipelines", "data warehousing", "data modeling",
+    "data lakehouse", "medallion architecture", "schema evolution",
+    "delta lake", "snowflake", "snowpark", "databricks", "pyspark",
+    "dbt", "data build tool", "apache spark", "apache flink", "hive",
+    "apache hive", "apache airflow", "kafka", "apache kafka",
+    "data validation", "data governance", "data quality", "data lineage",
+    "tableau", "power bi", "looker", "streamlit", "plotly",
+    "terraform", "jenkins", "ci/cd", "github actions", "azure devops",
+    "linux", "bash", "shell scripting",
+    "agentic ai", "fastapi", "prompt engineering", "github copilot",
+    "dimensional modeling", "star schema", "data vault",
+    "postgresql", "mysql", "mongodb", "redis", "elasticsearch",
+    "hadoop", "hdfs", "hbase",
+    "bigquery", "redshift", "azure synapse", "azure data factory",
+    "data lake", "s3", "azure blob", "gcs",
+    "prefect", "dagster", "luigi", "dask",
+    "great expectations", "dbt core", "dbt cloud",
 ]
 
 DOMAIN_KEYWORDS = [
